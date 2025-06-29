@@ -6,7 +6,7 @@ import * as cheerio from "cheerio"
 import TurndownService from "turndown"
 // @ts-ignore
 import PCR from "puppeteer-chromium-resolver"
-import { fileExistsAtPath } from "../../utils/fs"
+import { fileExistsAtPath } from "@utils/fs"
 
 interface PCRStats {
 	puppeteer: { launch: typeof launch }
@@ -71,7 +71,10 @@ export class UrlContentFetcher {
 		- domcontentloaded is when the basic DOM is loaded
 		this should be sufficient for most doc sites
 		*/
-		await this.page.goto(url, { timeout: 10_000, waitUntil: ["domcontentloaded", "networkidle2"] })
+		await this.page.goto(url, {
+			timeout: 10_000,
+			waitUntil: ["domcontentloaded", "networkidle2"],
+		})
 		const content = await this.page.content()
 
 		// use cheerio to parse and clean up the HTML

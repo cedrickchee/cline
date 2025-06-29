@@ -8,7 +8,10 @@ export function convertToOpenAiMessages(
 
 	for (const anthropicMessage of anthropicMessages) {
 		if (typeof anthropicMessage.content === "string") {
-			openAiMessages.push({ role: anthropicMessage.role, content: anthropicMessage.content })
+			openAiMessages.push({
+				role: anthropicMessage.role,
+				content: anthropicMessage.content,
+			})
 		} else {
 			// image_url.url is base64 encoded image data
 			// ensure it contains the content-type of the image: data:image/png;base64,
@@ -35,7 +38,7 @@ export function convertToOpenAiMessages(
 				)
 
 				// Process tool result messages FIRST since they must follow the tool use messages
-				let toolResultImages: Anthropic.Messages.ImageBlockParam[] = []
+				const toolResultImages: Anthropic.Messages.ImageBlockParam[] = []
 				toolMessages.forEach((toolMessage) => {
 					// The Anthropic SDK allows tool results to be a string or an array of text and image blocks, enabling rich and structured content. In contrast, the OpenAI SDK only supports tool results as a single string, so we map the Anthropic tool result parts into one concatenated string to maintain compatibility.
 					let content: string
@@ -85,7 +88,9 @@ export function convertToOpenAiMessages(
 							if (part.type === "image") {
 								return {
 									type: "image_url",
-									image_url: { url: `data:${part.source.media_type};base64,${part.source.data}` },
+									image_url: {
+										url: `data:${part.source.media_type};base64,${part.source.data}`,
+									},
 								}
 							}
 							return { type: "text", text: part.text }
@@ -122,7 +127,7 @@ export function convertToOpenAiMessages(
 				}
 
 				// Process tool use messages
-				let tool_calls: OpenAI.Chat.ChatCompletionMessageToolCall[] = toolMessages.map((toolMessage) => ({
+				const tool_calls: OpenAI.Chat.ChatCompletionMessageToolCall[] = toolMessages.map((toolMessage) => ({
 					id: toolMessage.id,
 					type: "function",
 					function: {
@@ -146,9 +151,7 @@ export function convertToOpenAiMessages(
 }
 
 // Convert OpenAI response to Anthropic format
-export function convertToAnthropicMessage(
-	completion: OpenAI.Chat.Completions.ChatCompletion,
-): Anthropic.Messages.Message {
+export function convertToAnthropicMessage(completion: OpenAI.Chat.Completions.ChatCompletion): Anthropic.Messages.Message {
 	const openAiMessage = completion.choices[0].message
 	const anthropicMessage: Anthropic.Messages.Message = {
 		id: completion.id,
@@ -158,6 +161,7 @@ export function convertToAnthropicMessage(
 			{
 				type: "text",
 				text: openAiMessage.content || "",
+				citations: null,
 			},
 		],
 		model: completion.model,
@@ -178,6 +182,8 @@ export function convertToAnthropicMessage(
 		usage: {
 			input_tokens: completion.usage?.prompt_tokens || 0,
 			output_tokens: completion.usage?.completion_tokens || 0,
+			cache_creation_input_tokens: null,
+			cache_read_input_tokens: null,
 		},
 	}
 
